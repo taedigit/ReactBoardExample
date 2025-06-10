@@ -83,6 +83,7 @@ const Board: React.FC = () => {
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [editForm, setEditForm] = useState({ name: '', position: '', birthday: '', nickname: '' });
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   const loadMembers = () => {
     getMembers().then(setMembers);
@@ -139,8 +140,21 @@ const Board: React.FC = () => {
     setPage(p);
   };
 
+  // 전체 선택/해제 체크박스 핸들러
+  const isAllChecked = pagedMembers.length > 0 && pagedMembers.every(m => selectedIds.includes(m.id));
+  const handleAllCheck = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedIds(pagedMembers.map(m => m.id));
+    } else {
+      setSelectedIds(selectedIds.filter(id => !pagedMembers.some(m => m.id === id)));
+    }
+  };
+  const handleRowCheck = (id: number, checked: boolean) => {
+    setSelectedIds(checked ? [...selectedIds, id] : selectedIds.filter(i => i !== id));
+  };
+
   return (
-    <div style={{ maxWidth: 1100, margin: '2rem auto', padding: 24, border: '1px solid #1976d2', borderRadius: 12, background: '#f9fafd', boxShadow: '0 2px 8px #0001' }}>
+    <div style={{ maxWidth: 1540, margin: '2rem auto', padding: 24, border: '1px solid #1976d2', borderRadius: 12, background: '#f9fafd', boxShadow: '0 2px 8px #0001' }}>
       <h2 style={{ textAlign: 'center', color: '#1976d2', marginBottom: 24 }}>멤버 게시판</h2>
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16, gap: 8 }}>
         <button onClick={() => setShowModal(true)} style={{ padding: '8px 20px', background: '#1976d2', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 'bold', cursor: 'pointer' }}>멤버 등록</button>
@@ -149,6 +163,9 @@ const Board: React.FC = () => {
       <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff' }}>
         <thead>
           <tr style={{ background: '#e3eafc' }}>
+            <th style={{ padding: 12, border: '1px solid #d0d7e2', width: 40 }}>
+              <input type="checkbox" checked={isAllChecked} onChange={handleAllCheck} />
+            </th>
             <th style={{ padding: 12, border: '1px solid #d0d7e2' }}>이름</th>
             <th style={{ padding: 12, border: '1px solid #d0d7e2' }}>직책</th>
             <th style={{ padding: 12, border: '1px solid #d0d7e2' }}>생일</th>
@@ -159,11 +176,18 @@ const Board: React.FC = () => {
         <tbody>
           {pagedMembers.length === 0 ? (
             <tr>
-              <td colSpan={5} style={{ textAlign: 'center', padding: 24, color: '#888' }}>멤버가 없습니다.</td>
+              <td colSpan={6} style={{ textAlign: 'center', padding: 24, color: '#888' }}>멤버가 없습니다.</td>
             </tr>
           ) : (
             pagedMembers.map(member => (
               <tr key={member.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                <td style={{ padding: 10, border: '1px solid #f0f0f0', textAlign: 'center' }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.includes(member.id)}
+                    onChange={e => handleRowCheck(member.id, e.target.checked)}
+                  />
+                </td>
                 <td style={{ padding: 10, border: '1px solid #f0f0f0', color: '#1976d2', cursor: 'pointer', textDecoration: 'underline' }}
                     onClick={() => setSelectedMember(member)}>
                   {member.name}
@@ -186,14 +210,14 @@ const Board: React.FC = () => {
           disabled={page === 1}
           style={{ padding: '6px 12px', border: '1px solid #1976d2', borderRadius: 4, background: page === 1 ? '#eee' : '#fff', color: '#1976d2', cursor: page === 1 ? 'default' : 'pointer', fontWeight: 'bold' }}
         >
-          처음
+          ⏮
         </button>
         <button
           onClick={() => handlePageChange(Math.max(1, page - 1))}
           disabled={page === 1}
           style={{ padding: '6px 12px', border: '1px solid #1976d2', borderRadius: 4, background: page === 1 ? '#eee' : '#fff', color: '#1976d2', cursor: page === 1 ? 'default' : 'pointer', fontWeight: 'bold' }}
         >
-          이전
+          ◀
         </button>
         {Array.from({ length: Math.min(totalPages, 10) }, (_, i) => i + 1).map(p => (
           <button
@@ -218,14 +242,14 @@ const Board: React.FC = () => {
           disabled={page === totalPages}
           style={{ padding: '6px 12px', border: '1px solid #1976d2', borderRadius: 4, background: page === totalPages ? '#eee' : '#fff', color: '#1976d2', cursor: page === totalPages ? 'default' : 'pointer', fontWeight: 'bold' }}
         >
-          다음
+          ▶
         </button>
         <button
           onClick={() => handlePageChange(totalPages)}
           disabled={page === totalPages}
           style={{ padding: '6px 12px', border: '1px solid #1976d2', borderRadius: 4, background: page === totalPages ? '#eee' : '#fff', color: '#1976d2', cursor: page === totalPages ? 'default' : 'pointer', fontWeight: 'bold' }}
         >
-          끝
+          ⏭
         </button>
       </div>
       {/* 등록 팝업 */}
